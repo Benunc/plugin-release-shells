@@ -42,6 +42,8 @@ echo "--------------------------------------------"
 read -p "TAG AND RELEASE VERSION: " VERSION
 echo "--------------------------------------------"
 echo ""
+read -p "Type LIVE to release an actual release on GitHub and WordPress.org" LIVE
+echo ""
 echo "Before continuing, confirm that you have done the following :)"
 echo ""
 read -p " - Added a changelog for "${VERSION}"?"
@@ -66,10 +68,13 @@ GIT_REPO="git@github.com:"${GITHUB_REPO_OWNER}"/"${GITHUB_REPO_NAME}".git"
 rm -Rf $ROOT_PATH$TEMP_GITHUB_REPO
 
 # CHECKOUT SVN DIR IF NOT EXISTS
-if [[ ! -d $TEMP_SVN_REPO ]];
+if [ "$LIVE" = "LIVE" ]
 then
-	echo "Checking out WordPress.org plugin repository"
-	svn checkout $SVN_REPO $TEMP_SVN_REPO || { echo "Unable to checkout repo."; exit 1; }
+	if [[ ! -d $TEMP_SVN_REPO ]];
+	then
+		echo "Checking out WordPress.org plugin repository"
+		svn checkout $SVN_REPO $TEMP_SVN_REPO || { echo "Unable to checkout repo."; exit 1; }
+	fi
 fi
 
 # CLONE GIT DIR
@@ -94,90 +99,157 @@ git checkout ${BRANCH} || { echo "Unable to checkout branch."; exit 1; }
 echo ""
 read -p "PRESS [ENTER] TO DEPLOY BRANCH "${BRANCH}
 
+# RUN COMPOSER
+if [ -f composer.json ]; then
+    composer install
+fi
+
+if [ -f package.json ]; then
+    npm install
+    npm run build
+fi
+
+# Checking for git submodules
+if [ -f .gitmodules ];
+then
+echo "Submodule found. Updating"
+git submodule init
+git submodule update
+else
+echo "No submodule exists"
+fi
+
 # REMOVE UNWANTED FILES & FOLDERS
-echo "Removing unwanted files"
-rm -Rf .git
-rm -Rf .github
-rm -Rf .wordpress-org
+echo "Removing unwanted files..."
+rm -Rf assets/src
 rm -Rf tests
+rm -Rf bower
+rm -Rf tmp
+rm -Rf node_modules
 rm -Rf apigen
-rm -f .gitattributes
-rm -f .gitignore
-rm -f .gitmodules
-rm -f .travis.yml
-rm -f Gruntfile.js
-rm -f package.json
-rm -f .jscrsrc
-rm -f .jshintrc
-rm -f .stylelintrc
-rm -f composer.json
-rm -f composer.lock
-rm -f phpcs.xml
-rm -f phpunit.xml
-rm -f phpunit.xml.dist
-rm -f README.md
-rm -f .coveralls.yml
-rm -f .editorconfig
-rm -f .scrutinizer.yml
-rm -f apigen.neon
-rm -f CHANGELOG.txt
-rm -f CONTRIBUTING.md
-rm -f CODE_OF_CONDUCT.md
-rm -rf assets/block/src
-rm -f .eslintignore
-rm -f .eslintrc
-rm -f package-lock.json
-rm -f webpack.config.js
-rm -f docker-compose.yml
+rm -Rf .idea
+rm -Rf .github
+rm -Rf vendor
 
-# MOVE INTO SVN DIR
-cd $ROOT_PATH$TEMP_SVN_REPO
+# Hidden Files
+rm -rf .bowerrc
+rm -rf .babelrc
+rm -rf .scrutinizer.yml
+rm -rf .travis.yml
+rm -rf .CONTRIBUTING.md
+rm -rf .gitattributes
+rm -rf .gitignore
+rm -rf .gitmodules
+rm -rf .editorconfig
+rm -rf .travis.yml
+rm -rf .jscrsrc
+rm -rf .jshintrc
+rm -rf .eslintrc
+rm -rf .eslintignore
+rm -rf .nvmrc
 
-# UPDATE SVN
-echo "Updating SVN"
-svn update || { echo "Unable to update SVN."; exit 1; }
+# Other Files
+rm -rf bower.json
+rm -rf composer.json
+rm -rf composer.lock
+rm -rf package.json
+rm -rf package-lock.json
+rm -rf Gruntfile.js
+rm -rf GulpFile.js
+rm -rf gulpfile.js
+rm -rf grunt-instructions.md
+rm -rf composer.json
+rm -rf phpunit.xml
+rm -rf phpunit.xml.dist
+rm -rf phpcs.ruleset.xml
+rm -rf phpcs.xml
+rm -rf LICENSE
+rm -rf LICENSE.txt
+rm -rf README.md
+rm -rf CHANGELOG.md
+rm -rf CODE_OF_CONDUCT.md
+rm -rf readme.md
+rm -rf postcss.config.js
+rm -rf webpack.config.js
+rm -rf docker-compose.yml
 
-# DELETE TRUNK
-echo "Replacing trunk"
-rm -Rf trunk/
+wait
+echo "All cleaned! Proceeding..."
 
-# COPY GIT DIR TO TRUNK
-cp -R $ROOT_PATH$TEMP_GITHUB_REPO trunk/
+if [ "$LIVE" = "LIVE" ]
+then
+	# MOVE INTO SVN DIR
+	cd $ROOT_PATH$TEMP_SVN_REPO
 
-# DO THE ADD ALL NOT KNOWN FILES UNIX COMMAND
-svn add --force * --auto-props --parents --depth infinity -q
+	# UPDATE SVN
+	echo "Updating SVN"
+	svn update || { echo "Unable to update SVN."; exit 1; }
 
-# DO THE REMOVE ALL DELETED FILES UNIX COMMAND
-MISSING_PATHS=$( svn status | sed -e '/^!/!d' -e 's/^!//' )
+	# DELETE TRUNK
+	echo "Replacing trunk"
+	rm -Rf trunk/
 
-# iterate over filepaths
-for MISSING_PATH in $MISSING_PATHS; do
-    svn rm --force "$MISSING_PATH"
-done
+	# COPY GIT DIR TO TRUNK
+	cp -R $ROOT_PATH$TEMP_GITHUB_REPO trunk/
 
-# COPY TRUNK TO TAGS/$VERSION
-echo "Copying trunk to new tag"
-svn copy trunk tags/${VERSION} || { echo "Unable to create tag."; exit 1; }
+	# DO THE ADD ALL NOT KNOWN FILES UNIX COMMAND
+	svn add --force * --auto-props --parents --depth infinity -q
 
-# DO SVN COMMIT
+	# DO THE REMOVE ALL DELETED FILES UNIX COMMAND
+	MISSING_PATHS=$( svn status | sed -e '/^!/!d' -e 's/^!//' )
+
+	# iterate over filepaths
+	for MISSING_PATH in $MISSING_PATHS; do
+		svn rm --force "$MISSING_PATH"
+	done
+
+	# COPY TRUNK TO TAGS/$VERSION
+	echo "Copying trunk to new tag"
+	svn copy trunk tags/${VERSION} || { echo "Unable to create tag."; exit 1; }
+
+	# DO SVN COMMIT
+	clear
+	echo "Showing SVN status"
+	svn status
+
+	# PROMPT USER
+	echo ""
+	read -p "PRESS [ENTER] TO COMMIT RELEASE "${VERSION}" TO WORDPRESS.ORG AND GITHUB"
+	echo ""
+
+	# CREATE THE GITHUB RELEASE
+	echo "Creating GITHUB release"
+	API_JSON=$(printf '{ "tag_name": "%s","target_commitish": "%s","name": "%s", "body": "Release of version %s", "draft": false, "prerelease": false }' $VERSION $BRANCH $VERSION $VERSION)
+	RESULT=$(curl --data "${API_JSON}" https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases?access_token=${GITHUB_ACCESS_TOKEN})
+
+	# DEPLOY
+	echo ""
+	echo "Committing to WordPress.org...this may take a while..."
+	svn commit -m "Release "${VERSION}", see readme.txt for the changelog." || { echo "Unable to commit."; exit 1; }
+fi
+
+rm -Rf .git
+sleep 3
 clear
-echo "Showing SVN status"
-svn status
-
-# PROMPT USER
-echo ""
-read -p "PRESS [ENTER] TO COMMIT RELEASE "${VERSION}" TO WORDPRESS.ORG AND GITHUB"
+read -p "Check to make sure .git is removed"
 echo ""
 
-# CREATE THE GITHUB RELEASE
-echo "Creating GITHUB release"
-API_JSON=$(printf '{ "tag_name": "%s","target_commitish": "%s","name": "%s", "body": "Release of version %s", "draft": false, "prerelease": false }' $VERSION $BRANCH $VERSION $VERSION)
-RESULT=$(curl --data "${API_JSON}" https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases?access_token=${GITHUB_ACCESS_TOKEN})
+# Create the Zip File
+echo "Creating zip package..."
+cd "$ROOT_PATH"
+mv "$TEMP_GITHUB_REPO" "$PLUGIN_SLUG" #Rename cleaned repo
 
-# DEPLOY
+read -p "check renamed repo"
 echo ""
-echo "Committing to WordPress.org...this may take a while..."
-svn commit -m "Release "${VERSION}", see readme.txt for the changelog." || { echo "Unable to commit."; exit 1; }
+wait
+zip -r "$PLUGIN_SLUG".zip "$PLUGIN_SLUG" #Zip it
+wait
+
+mv "$PLUGIN_SLUG" "$TEMP_GITHUB_REPO" #Rename back to temp dir
+wait
+echo "ZIP package created"
+echo ""
+read -p "check ZIP"
 
 # REMOVE THE TEMP DIRS
 echo "CLEANING UP"
