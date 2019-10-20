@@ -85,12 +85,13 @@ clear
 
 # ASK INFO
 echo ""
+read -p "Type LIVE to actually release a new version. " LIVE
 echo "Before continuing, confirm that you have done the following :)"
 echo ""
 read -p " - Added a changelog for "${VERSION}"?"
 read -p " - Set version in the readme.txt and main file to "${VERSION}"?"
 read -p " - Set stable tag in the readme.txt file to "${VERSION}"?"
-read -p " - Updated the POT file?"
+read -p " - Updated the POT file with cd app/public/wp-content/plugins/${PLUGIN_SLUG}/ and wp i18n make-pot . languages/${PLUGIN_SLUG}.pot"
 read -p " - Updated the version number in the LICENSE callback?"
 read -p " - Committed all changes up to GitHub?"
 echo ""
@@ -120,7 +121,7 @@ git fetch origin
 echo "Which branch do you wish to deploy?"
 git branch -r || { echo "Unable to list branches."; exit 1; }
 echo ""
-read -p "origin/master" BRANCH
+read -p "origin/" BRANCH
 
 # If no branch default var to master
 if [ "$BRANCH" = "" ]; then
@@ -156,18 +157,21 @@ else
 echo "No submodule exists"
 fi
 
-# PROMPT USER
-echo ""
-read -p "Press [ENTER] to commit release "${VERSION}" to GitHub"
-echo ""
+if [ "$LIVE" = "LIVE" ]
+then
 
-# CREATE THE GITHUB RELEASE
-echo "Creating GitHub tag and release"
-git tag -a "v"${VERSION} -m "Tagging version: $VERSION." -m "The ZIP and TAR.GZ here are not production-ready." -m "Build by checking out the release and running composer install, npm install, and npm run build."
+    # PROMPT USER
+    echo ""
+    read -p "Press [ENTER] to commit release "${VERSION}" to GitHub"
+    echo ""
 
-git push origin --tags # push tags to remote
-echo "";
+    # CREATE THE GITHUB RELEASE
+    echo "Creating GitHub tag and release"
+    git tag -a "v"${VERSION} -m "Tagging version: $VERSION." -m "The ZIP and TAR.GZ here are not production-ready." -m "Build by checking out the release and running composer install, npm install, and npm run build."
 
+    git push origin --tags # push tags to remote
+    echo "";
+fi
 
 # REMOVE UNWANTED FILES & FOLDERS
 echo "Removing unwanted files..."
@@ -255,22 +259,25 @@ wait
 echo "Zip package created"
 echo ""
 
-# REMOVE EVERYTHING BUT THE README FILE IN THE FOLDER
-echo "Creating readme.txt file for website:"
-mv "$ROOT_PATH$TEMP_GITHUB_REPO"/readme.txt /tmp/
-rm -rf "$ROOT_PATH$TEMP_GITHUB_REPO"
-mkdir "$ROOT_PATH$PLUGIN_SLUG"
-mv /tmp/readme.txt "$ROOT_PATH$PLUGIN_SLUG"
-echo ""
+if [ "$LIVE" = "LIVE" ]
+then
+    # REMOVE EVERYTHING BUT THE README FILE IN THE FOLDER
+    echo "Creating readme.txt file for website:"
+    mv "$ROOT_PATH$TEMP_GITHUB_REPO"/readme.txt /tmp/
+    rm -rf "$ROOT_PATH$TEMP_GITHUB_REPO"
+    mkdir "$ROOT_PATH$PLUGIN_SLUG"
+    mv /tmp/readme.txt "$ROOT_PATH$PLUGIN_SLUG"
+    echo ""
 
-# SECURE COPY FILES OVER TO GIVEWP.COM
-echo "------------------------------------------------------------"
-read -p "Are you ready to move the files to betterclicktotweet.com?"
-echo "------------------------------------------------------------"
-scp "$PLUGIN_SLUG".zip bctt-user@192.34.56.118:/srv/users/bctt-user/apps/betterclicktotweet/public/wp-content/uploads/edd/addons/
-scp "$ROOT_PATH$PLUGIN_SLUG"/readme.txt bctt-user@192.34.56.118:/srv/users/bctt-user/apps/betterclicktotweet/public/wp-content/uploads/edd/addons/"$PLUGIN_SLUG".txt
-echo "Files transferred..."
-echo ""
+    # SECURE COPY FILES OVER TO GIVEWP.COM
+    echo "------------------------------------------------------------"
+    read -p "Are you ready to move the files to betterclicktotweet.com?"
+    echo "------------------------------------------------------------"
+    scp "$PLUGIN_SLUG".zip bctt-user@192.34.56.118:/srv/users/bctt-user/apps/betterclicktotweet/public/wp-content/uploads/edd/addons/
+    scp "$ROOT_PATH$PLUGIN_SLUG"/readme.txt bctt-user@192.34.56.118:/srv/users/bctt-user/apps/betterclicktotweet/public/wp-content/uploads/edd/addons/"$PLUGIN_SLUG".txt
+    echo "Files transferred..."
+    echo ""
+fi
 
 # REMOVE THE TEMP DIRS
 echo "Cleaning up the directory..."
