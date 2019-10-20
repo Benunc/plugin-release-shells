@@ -119,6 +119,22 @@ else
 echo "No submodule exists"
 fi
 
+if [ "$LIVE" = "LIVE" ]
+then
+
+    # PROMPT USER
+    echo ""
+    read -p "Press [ENTER] to commit release "${VERSION}" to GitHub"
+    echo ""
+
+    # CREATE THE GITHUB RELEASE
+    echo "Creating GitHub tag and release"
+    git tag -a "v"${VERSION} -m "Tagging version: $VERSION." -m "The ZIP and TAR.GZ here are not production-ready." -m "Build by checking out the release and running composer install, npm install, and npm run build."
+
+    git push origin --tags # push tags to remote
+    echo "";
+fi
+
 # REMOVE UNWANTED FILES & FOLDERS
 echo "Removing unwanted files..."
 rm -Rf assets/src
