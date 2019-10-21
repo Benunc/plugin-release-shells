@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# Forked with permission from GiveWP.
 # GITHUB ADD-ON RELEASER
 #
 # READ BEFORE USING:

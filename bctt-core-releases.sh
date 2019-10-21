@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # By Mike Jolley, based on work by Barry Kooij ;)
+# I (Ben Meredith) then forked it from GiveWP, and added my own flair.
 # License: GPL v3
 
 # This program is free software: you can redistribute it and/or modify
