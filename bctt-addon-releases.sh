@@ -175,7 +175,7 @@ then
 fi
 
 # REMOVE UNWANTED FILES & FOLDERS
-echo "Removing unwanted files..."
+echo "Removing files that don't need to be in the release..."
 rm -Rf assets/src
 rm -Rf tests
 rm -Rf bower
@@ -241,7 +241,7 @@ cd "$ROOT_PATH$TEMP_GITHUB_REPO"
 rm -Rf .git
 sleep 3
 clear
-read -p "Check to make sure .git is removed"
+read -p "Check to make sure .git is removed from the directory."
 echo ""
 
 # Create the Zip File
@@ -249,7 +249,7 @@ echo "Creating zip package..."
 cd "$ROOT_PATH"
 mv "$TEMP_GITHUB_REPO" "$PLUGIN_SLUG" #Rename cleaned repo
 
-read -p "check renamed repo"
+read -p "check that the repo is named correctly"
 echo ""
 wait
 zip -r "$PLUGIN_SLUG".zip "$PLUGIN_SLUG" #Zip it
@@ -263,14 +263,14 @@ echo ""
 if [ "$LIVE" = "LIVE" ]
 then
     # REMOVE EVERYTHING BUT THE README FILE IN THE FOLDER
-    echo "Creating readme.txt file for website:"
+    echo "Creating readme.txt file for website..."
     mv "$ROOT_PATH$TEMP_GITHUB_REPO"/readme.txt /tmp/
     rm -rf "$ROOT_PATH$TEMP_GITHUB_REPO"
     mkdir "$ROOT_PATH$PLUGIN_SLUG"
     mv /tmp/readme.txt "$ROOT_PATH$PLUGIN_SLUG"
     echo ""
 
-    # SECURE COPY FILES OVER TO GIVEWP.COM
+    # SECURE COPY FILES OVER TO THE WEBSITE
     echo "------------------------------------------------------------"
     read -p "Are you ready to move the files to betterclicktotweet.com?"
     echo "------------------------------------------------------------"
@@ -281,7 +281,7 @@ then
 fi
 
 # REMOVE THE TEMP DIRS
-echo "Cleaning up the directory..."
+echo "Cleaning up (removing the temp directories)..."
 rm -Rf "$ROOT_PATH$TEMP_GITHUB_REPO"
 rm -Rf "$PLUGIN_SLUG"
 
