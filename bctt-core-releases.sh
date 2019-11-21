@@ -189,6 +189,7 @@ rm -rf readme.md
 rm -rf postcss.config.js
 rm -rf webpack.config.js
 rm -rf docker-compose.yml
+rm -Rf .git
 
 wait
 echo "All cleaned! Proceeding..."
@@ -245,7 +246,7 @@ then
 	svn commit -m "Release "${VERSION}", see readme.txt for the changelog." || { echo "Unable to commit."; exit 1; }
 fi
 
-rm -Rf .git
+
 sleep 3
 clear
 read -p "Check to make sure .git is removed"
