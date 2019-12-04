@@ -190,6 +190,7 @@ rm -rf postcss.config.js
 rm -rf webpack.config.js
 rm -rf docker-compose.yml
 rm -Rf .git
+rm -rf CONTRIBUTING.md
 
 wait
 echo "All cleaned! Proceeding..."
