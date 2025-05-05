@@ -103,7 +103,7 @@ clear
 # SET VARS
 ROOT_PATH=$(pwd)"/"
 TEMP_GITHUB_REPO=${PLUGIN_SLUG}"-git"
-GIT_REPO="git@github.com:"${GITHUB_REPO_OWNER}"/"${GITHUB_REPO_NAME}".git"
+GIT_REPO="https://github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git"
 
 # DELETE OLD TEMP DIRS BEFORE BEGINNING
 rm -Rf "$ROOT_PATH$TEMP_GITHUB_REPO"
@@ -168,9 +168,9 @@ then
 
     # CREATE THE GITHUB RELEASE
     echo "Creating GitHub tag and release"
-    git tag -a "v"${VERSION} -m "Tagging version: $VERSION." -m "The ZIP and TAR.GZ here are not production-ready." -m "Build by checking out the release and running composer install, npm install, and npm run build."
+    git tag -a "v"${VERSION} -m "Tagging version: $VERSION." -m "The ZIP and TAR.GZ here are not production-ready." -m "Build by checking out the release and running composer install, npm install, and npm run build." || true
 
-    git push origin --tags # push tags to remote
+    git push origin --tags || true # push tags to remote
     echo "";
 fi
 
@@ -274,8 +274,8 @@ then
     echo "------------------------------------------------------------"
     read -p "Are you ready to move the files to betterclicktotweet.com?"
     echo "------------------------------------------------------------"
-    scp "$PLUGIN_SLUG".zip bctt-user@192.34.56.118:/srv/users/bctt-user/apps/betterclicktotweet/public/wp-content/uploads/edd/addons/
-    scp "$ROOT_PATH$PLUGIN_SLUG"/readme.txt bctt-user@192.34.56.118:/srv/users/bctt-user/apps/betterclicktotweet/public/wp-content/uploads/edd/addons/"$PLUGIN_SLUG".txt
+    scp "$PLUGIN_SLUG".zip betterclicktotweet@138.197.111.200:/sites/www.betterclicktotweet.com/files/wp-content/uploads/edd/addons/
+    scp "$ROOT_PATH$PLUGIN_SLUG"/readme.txt betterclicktotweet@138.197.111.200:/sites/www.betterclicktotweet.com/files/wp-content/uploads/edd/addons/"$PLUGIN_SLUG".txt
     echo "Files transferred..."
     echo ""
 fi
