@@ -111,7 +111,7 @@ rm -Rf "$PLUGIN_SLUG"
 
 # CLONE GIT DIR
 echo "Cloning GIT repository from GitHub"
-git clone --progress $GIT_REPO $TEMP_GITHUB_REPO || { echo "Unable to clone repo."; exit 1; }
+git clone --progress "$GIT_REPO" "$TEMP_GITHUB_REPO" || { echo "Unable to clone repo."; exit 1; }
 
 # MOVE INTO GIT DIR
 cd "$ROOT_PATH$TEMP_GITHUB_REPO"

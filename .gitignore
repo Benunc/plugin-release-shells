@@ -1,3 +1,4 @@
 # Release Script Artifacts
 *.zip
 *-git/ 
+.DS_Store

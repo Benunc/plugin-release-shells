@@ -66,7 +66,7 @@ SVN_REPO="http://plugins.svn.wordpress.org/"${PLUGIN_SLUG}"/"
 GIT_REPO="git@github.com:"${GITHUB_REPO_OWNER}"/"${GITHUB_REPO_NAME}".git"
 
 # DELETE OLD TEMP DIRS
-rm -Rf $ROOT_PATH$TEMP_GITHUB_REPO
+rm -Rf "$ROOT_PATH$TEMP_GITHUB_REPO"
 
 # CHECKOUT SVN DIR IF NOT EXISTS
 if [ "$LIVE" = "LIVE" ]
@@ -80,10 +80,10 @@ fi
 
 # CLONE GIT DIR
 echo "Cloning GIT repository from GITHUB"
-git clone --progress $GIT_REPO $TEMP_GITHUB_REPO || { echo "Unable to clone repo."; exit 1; }
+git clone --progress "$GIT_REPO" "$TEMP_GITHUB_REPO" || { echo "Unable to clone repo."; exit 1; }
 
 # MOVE INTO GIT DIR
-cd $ROOT_PATH$TEMP_GITHUB_REPO
+cd "$ROOT_PATH$TEMP_GITHUB_REPO"
 
 # LIST BRANCHES
 clear
@@ -128,12 +128,15 @@ then
     read -p "Press [ENTER] to commit release "${VERSION}" to GitHub"
     echo ""
 
-    # CREATE THE GITHUB RELEASE
-    echo "Creating GitHub tag and release"
-    git tag -a "v"${VERSION} -m "Tagging version: $VERSION." -m "The ZIP and TAR.GZ here are not production-ready." -m "Build by checking out the release and running composer install, npm install, and npm run build."
-
-    git push origin --tags # push tags to remote
-    echo "";
+    # CREATE THE GITHUB RELEASE (skip if tag already exists)
+    if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+        echo "Tag v${VERSION} already exists on GitHub. Skipping tag creation."
+    else
+        echo "Creating GitHub tag and release"
+        git tag -a "v"${VERSION} -m "Tagging version: $VERSION." -m "The ZIP and TAR.GZ here are not production-ready." -m "Build by checking out the release and running composer install, npm install, and npm run build."
+        git push origin --tags # push tags to remote
+        echo "";
+    fi
 fi
 
 # REMOVE UNWANTED FILES & FOLDERS
@@ -197,7 +200,7 @@ echo "All cleaned! Proceeding..."
 if [ "$LIVE" = "LIVE" ]
 then
 	# MOVE INTO SVN DIR
-	cd $ROOT_PATH$TEMP_SVN_REPO
+	cd "$ROOT_PATH$TEMP_SVN_REPO"
 
 	# UPDATE SVN
 	echo "Updating SVN"
@@ -208,7 +211,7 @@ then
 	rm -Rf trunk/
 
 	# COPY GIT DIR TO TRUNK
-	cp -R $ROOT_PATH$TEMP_GITHUB_REPO trunk/
+	cp -R "$ROOT_PATH$TEMP_GITHUB_REPO" trunk/
 
 	# DO THE ADD ALL NOT KNOWN FILES UNIX COMMAND
 	svn add --force * --auto-props --parents --depth infinity -q
@@ -221,9 +224,13 @@ then
 		svn rm --force "$MISSING_PATH"
 	done
 
-	# COPY TRUNK TO TAGS/$VERSION
-	echo "Copying trunk to new tag"
-	svn copy trunk tags/${VERSION} || { echo "Unable to create tag."; exit 1; }
+	# COPY TRUNK TO TAGS/$VERSION (skip if tag already exists)
+	if [ -d "tags/${VERSION}" ]; then
+		echo "SVN tag ${VERSION} already exists. Skipping tag creation."
+	else
+		echo "Copying trunk to new tag"
+		svn copy trunk tags/${VERSION} || { echo "Unable to create tag."; exit 1; }
+	fi
 
 	# DO SVN COMMIT
 	clear
@@ -271,8 +278,8 @@ read -p "check ZIP"
 
 # REMOVE THE TEMP DIRS
 echo "CLEANING UP"
-rm -Rf $ROOT_PATH$TEMP_GITHUB_REPO
-rm -Rf $ROOT_PATH$TEMP_SVN_REPO
+rm -Rf "$ROOT_PATH$TEMP_GITHUB_REPO"
+rm -Rf "$ROOT_PATH$TEMP_SVN_REPO"
 
 # DONE, BYE
 echo "RELEASER DONE :D"
