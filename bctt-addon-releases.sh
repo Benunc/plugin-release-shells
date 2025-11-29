@@ -274,8 +274,8 @@ then
     echo "------------------------------------------------------------"
     read -p "Are you ready to move the files to betterclicktotweet.com?"
     echo "------------------------------------------------------------"
-    scp "$PLUGIN_SLUG".zip betterclicktotweet@138.197.111.200:/sites/www.betterclicktotweet.com/files/wp-content/uploads/edd/addons/
-    scp "$ROOT_PATH$PLUGIN_SLUG"/readme.txt betterclicktotweet@138.197.111.200:/sites/www.betterclicktotweet.com/files/wp-content/uploads/edd/addons/"$PLUGIN_SLUG".txt
+    scp "$PLUGIN_SLUG".zip betterclicktotweet@134.209.166.61:/sites/www.betterclicktotweet.com/files/wp-content/uploads/edd/addons/
+    scp "$ROOT_PATH$PLUGIN_SLUG"/readme.txt betterclicktotweet@134.209.166.61:/sites/www.betterclicktotweet.com/files/wp-content/uploads/edd/addons/"$PLUGIN_SLUG".txt
     echo "Files transferred..."
     echo ""
 fi
